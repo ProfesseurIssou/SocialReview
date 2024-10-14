@@ -1,7 +1,6 @@
-////////// ACCOUNT //////////
 /**
  * Récupérer la liste des comptes
- * @returns {Array<{id: number, name: string, platform: string, url: string}>}
+ * @returns {Array<{id: number, username: string, platform: string, url: string}>}
 */
 function Account_Get_All(){
     var accounts = [];
@@ -13,6 +12,20 @@ function Account_Get_All(){
         accounts = JSON.parse(xhr.responseText);
     }
     return accounts;
+}
+/**
+ * Créer un nouveau compte
+ * @param {number} account_id
+ * @param {number} platform_id
+ * @param {string} url
+ * @returns {boolean}
+*/
+function Account_Create(account_id, platform_id, url){
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/account/create', false);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify({account_id: account_id, platform_id: platform_id, url: url}));
+    return xhr.status == 200;
 }
 
 
@@ -50,7 +63,26 @@ function Repport_Get_All(){
     }
     return repports;
 }
-/////////////////////////////
 
+
+
+
+/**
+ * Search username
+ * @param {string} username
+ * @returns {Array<{id: number, name: string, platform: string, url: string}>}
+*/
+function Account_Search(username){
+    var accounts = [];
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/search', false);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify({username: username}));
+    console.log(xhr.responseText);
+    if (xhr.status == 200) {
+        accounts = JSON.parse(xhr.responseText);
+    }
+    return accounts;
+}
 
 

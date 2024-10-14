@@ -10,20 +10,64 @@ except ImportError:
 app = Flask(__name__)
 db = Database()
 
+
+def MOCK_SEARCH():
+    """
+        - Mock recherches twitter, facebook, instagram, discord
+    """
+    return [
+        {"id": "526433", "platform": "twitter", "username": "vidou", "url": "https://twitter.com/vidou"},
+        {"id": "66465", "platform": "facebook", "username": "vidou", "url": "https://facebook.com/vidou"},
+        {"id": "#7755", "platform": "instagram", "username": "vidou", "url": "https://instagram.com/vidou"},
+        {"id": "854654354", "platform": "twitter", "username": "mahat", "url": "https://twitter.com/mahat"},
+        {"id": "23213", "platform": "facebook", "username": "mahat", "url": "https://facebook.com/mahat"},
+        {"id": "531323522", "platform": "twitter", "username": "professeurissou", "url": "https://twitter.com/professeurissou"},
+    ]
+
+
+
+
 # ROUTE #
 @app.route('/')
 def index():
     return render_template('index.html')
-@app.route('/repports')
-def repports():
-    return render_template('repports.html')
-@app.route('/account/<int:account_id>')
-def account(account_id: int):
-    return render_template('account.html')
+@app.route('/account/<int:repport_account_id>') 
+def account(repport_account_id: int):
+    return render_template('account.html', repport_account_id=repport_account_id)
 #########
 
 
 # API #
+@app.route('/api/search', methods=['POST'])
+def search():
+    """
+        - POST /api/search
+        - Search for repports
+        - Request Body: {
+            "username": str
+        }
+        - Response: [
+            {
+                "id": str,
+                "platform": str,
+                "username": str,
+                "url": str
+            }
+        ]
+    """
+    data = request.get_json()
+    username = data.get("username")
+    if username == "":
+        return []
+    
+    results = MOCK_SEARCH()
+    # filter results by username
+    results = [result for result in results if username in result["username"]]
+
+    return results
+
+
+
 @app.route('/api/platforms', methods=['GET'])
 def get_platforms():
     platforms = db.Platform_GetAll()
@@ -33,54 +77,80 @@ def get_platforms():
 def get_accounts():
     accounts = db.Account_GetAll()
     return accounts
-
-@app.route("/api/repports", methods=['GET'])
-def get_repports():
-    repports = db.Repport_GetAll()
-    return repports
-@app.route("/api/repport", methods=['POST'])
-def post_repport():
+@app.route("/api/account/create", methods=['POST'])
+def post_account():
     """
-        - POST /api/repport
-        - Create a new repport
+        - POST /api/account/create
+        - Create a new account
         - Request Body: {
-            "account_id": int,  # Can be null
+            "account_id": int,
             "platform_id": int,
-            "tag_id": int,
-            "url": str,
-            "text": str
+            "url": str
+        }
     """
-    repport = request.get_json()
-    account_id = repport.get("account_id")
-    platform_id = repport.get("platform_id")
-    tag_id = repport.get("tag_id")
-    url = repport.get("url")
-    text = repport.get("text")
-
-    # Check if account_id exists
-    is_new_account: bool = False
-    if account_id:
-        account = db.Account_GetBy_ID(account_id)
-        if not account:
-            is_new_account = True
-    else:
-        is_new_account = True
+    account = request.get_json()
+    account_id = account.get("account_id")
+    platform_id = account.get("platform_id")
+    url = account.get("url")
 
     # Check if platform_id exists
     platform = db.Platform_GetBy_ID(platform_id)
     if not platform:
         return {"error": "Platform not found"}
     
-    # Check if tag_id exists
-    tag = db.Repport_Tag_GetBy_ID(tag_id)
-    if not tag:
-        return {"error": "Tag not found"}
+    # Check if user_id exists
+    db.Account_Insert(platform_id=platform_id, account_id=account_id, account_url=url)
+    return True
+
+
+
+@app.route("/api/repports", methods=['GET'])
+def get_repports():
+    repports = db.Repport_GetAll()
+    return repports
+# @app.route("/api/repport", methods=['POST'])
+# def post_repport():
+#     """
+#         - POST /api/repport
+#         - Create a new repport
+#         - Request Body: {
+#             "account_id": int,  # Can be null
+#             "platform_id": int,
+#             "tag_id": int,
+#             "url": str,
+#             "text": str
+#     """
+#     repport = request.get_json()
+#     account_id = repport.get("account_id")
+#     platform_id = repport.get("platform_id")
+#     tag_id = repport.get("tag_id")
+#     url = repport.get("url")
+#     text = repport.get("text")
+
+#     # Check if account_id exists
+#     is_new_account: bool = False
+#     if account_id:
+#         account = db.Account_GetBy_ID(account_id)
+#         if not account:
+#             is_new_account = True
+#     else:
+#         is_new_account = True
+
+#     # Check if platform_id exists
+#     platform = db.Platform_GetBy_ID(platform_id)
+#     if not platform:
+#         return {"error": "Platform not found"}
     
-    # Create new account if not exists
+#     # Check if tag_id exists
+#     tag = db.Repport_Tag_GetBy_ID(tag_id)
+#     if not tag:
+#         return {"error": "Tag not found"}
+    
+#     # Create new account if not exists
 
 
-    db.Repport_Insert(repport)
-    return repport
+#     db.Repport_Insert(repport)
+#     return repport
 
 #######
 

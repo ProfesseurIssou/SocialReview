@@ -68,9 +68,10 @@ class Database:
         db.execute("CREATE TABLE IF NOT EXISTS repport (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER REFERENCES account (id) ON DELETE CASCADE, repport_date TEXT NOT NULL, repport_tag_id INTEGER REFERENCES tag (id) ON DELETE CASCADE, repport_text TEXT NOT NULL);")
 
         # Insert the default platforms
-        db.execute("INSERT INTO platform (name) VALUES ('twitter');")
-        db.execute("INSERT INTO platform (name) VALUES ('meta');")
-        db.execute("INSERT INTO platform (name) VALUES ('discord');")
+        db.execute("INSERT INTO platform (name, base_url) VALUES ('twitter', 'https://twitter.com/');")
+        db.execute("INSERT INTO platform (name, base_url) VALUES ('facebook', 'https://facebook.com/');")
+        db.execute("INSERT INTO platform (name, base_url) VALUES ('discord', 'https://discord.com/');")
+        db.execute("INSERT INTO platform (name, base_url) VALUES ('instagram', 'https://instagram.com/');")
 
         # Insert the default repport tags
         db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Autre');")
@@ -208,7 +209,7 @@ class Database:
                 account_id: str
                 account_url: str
         """
-        self.db.execute("INSERT INTO repport_account (platform_id, account_id, account_url) VALUES (?, ?, ?, ?);", [platform_id, account_id, account_url])
+        self.db.execute("INSERT INTO repport_account (platform_id, account_id, account_url) VALUES (?, ?, ?);", [platform_id, account_id, account_url])
         return
     #####################
 
