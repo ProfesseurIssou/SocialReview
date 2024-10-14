@@ -1,0 +1,185 @@
+<!-- https://dblate.github.io/jquery.json-editor/ -->
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='w3-theme-black.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='font-awesome.min.css') }}">
+    <script src="{{ url_for('static',filename='api.js') }}"></script>
+    <title>EndlessMonitoring</title>
+</head>
+
+<body onload="PageLoaded()">
+
+    <!-- Header -->
+    <header class="w3-container w3-theme w3-padding" id="myHeader">
+        <div class="w3-center">
+            <h1>SocialReview</h1>
+        </div>
+    </header>
+
+
+
+    <!-- Page Container -->
+    <div class="w3-main" style="margin-left:200px;margin-top:43px;">
+
+        <!-- SUBJECT STATS -->
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-quarter">
+              <div class="w3-container w3-blue w3-padding-16">
+                <div class="w3-right">
+                  <h3 id="nbTotalUser">Loading</h3>
+                </div>
+                <h4>Nombre de compte</h4>
+              </div>
+            </div>
+            <div class="w3-quarter">
+              <div class="w3-container w3-green w3-padding-16">
+                <div class="w3-right">
+                  <h3 id="nbPlatform">Loading</h3>
+                </div>
+                <h4>Nombre de platforme</h4>
+              </div>
+            </div>
+            <div class="w3-quarter">
+              <div class="w3-container w3-red w3-padding-16">
+                <div class="w3-right">
+                  <h3 id="nbTags">Loading</h3>
+                </div>
+                <h4>Nombre de repport</h4>
+              </div>
+            </div>
+        </div>
+        <!-- SUBJECT STATS -->
+
+          
+        <!-- ACCOUNT -->
+        <div class="w3-row-padding w3-center w3-margin-top">
+            <h5>Accounts</h5>
+            <!-- SEARCH BAR -->
+            <input type="text" id="search_input" placeholder="Search Username/url..." onkeyup="searchUser()">
+            <script>
+                function searchUser() {
+                    var input, filter, table, tr, td, i, txtValue;
+                    input = document.getElementById("search_input");
+                    filter = input.value.toUpperCase();
+                    table = document.getElementById("accounts_table");
+
+                    user_tr = table.getElementsByTagName("tr");
+                    for (i = 0; i < user_tr.length; i++) {
+                        if (i == 0) {   // Skip header
+                            continue;
+                        }
+                        username_td = user_tr[i].getElementsByTagName("td")[0];
+                        url_td = user_tr[i].getElementsByTagName("td")[2];
+
+                        username_catched = false;
+                        if (username_td) {
+                            txtValue = username_td.textContent || username_td.innerText;
+                            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                                username_catched = true;
+                            }
+                        }
+                        url_catched = false;
+                        if (url_td) {
+                            txtValue = url_td.textContent || url_td.innerText;
+                            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                                url_catched = true;
+                            }
+                        }
+
+                        if (username_catched || url_catched) {
+                            user_tr[i].style.display = "";
+                        } else {
+                            user_tr[i].style.display = "none";
+                        }
+                    }
+                }
+            </script>
+            <!-- SEARCH BAR -->
+
+            <table class="w3-table w3-striped w3-white" id="accounts_table">
+                <!-- <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Platform</th>
+                        <th>Url</th>
+                        <th>Score</th>
+                        <th>Profile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Username</td>
+                        <td>Platform</td>
+                        <td>Url</td>
+                        <td>Score</td>
+                        <td><a href="account/{user_id}">Profile</a></td>
+                    </tr>
+                </tbody> -->
+            </table>
+        </div>
+        <!-- ACCOUNT -->
+
+    </div>
+
+
+
+    <script>
+        const HTMLNbTotalUser = document.getElementById("nbTotalUser");
+        const HTMLNbPlatform = document.getElementById("nbPlatform");
+        const HTMLNbTags = document.getElementById("nbTags");
+
+        function PageLoaded() {
+            console.log("PageLoaded");
+            UpdateStats();
+            ReloadTable();
+        }
+
+        function UpdateStats() {
+            console.log("UpdateStats");
+        }
+
+        function ReloadTable() {
+            console.log("ReloadTable");
+            const table = document.getElementById("accounts_table");
+            table.innerHTML = "";
+            const headers = ["Username", "Platform", "Url", "Score", "Profile"];
+            const data = [["test", "Twitter", "https://twitter/test", "9999"]];
+
+
+            const tr = document.createElement("tr");
+            headers.forEach(header => {
+                const th = document.createElement("th");
+                th.textContent = header;
+                tr.appendChild(th);
+            });
+            table.appendChild(tr);
+            
+            const tbody = document.createElement("tbody");
+            data.forEach(row => {
+                const tr = document.createElement("tr");
+                row.forEach(cell => {
+                    const td = document.createElement("td");
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                const td = document.createElement("td");
+                const a = document.createElement("a");
+                a.href = "account/{user_id}";
+                a.textContent = "Profile";
+                td.appendChild(a);
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+        }
+
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,278 @@
+<!-- https://dblate.github.io/jquery.json-editor/ -->
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='w3-theme-black.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='font-awesome.min.css') }}">
+    <script src="{{ url_for('static',filename='api.js') }}"></script>
+    <title>EndlessMonitoring</title>
+</head>
+
+<body onload="PageLoaded()">
+
+    <!-- Header -->
+    <header class="w3-container w3-theme w3-padding" id="myHeader">
+        <div class="w3-center">
+            <h1>EndlessMonitoring</h1>
+        </div>
+    </header>
+
+    <!-- Navbar -->
+    <!-- NavBar -->
+
+
+    <!-- Page Container -->
+    <div class="w3-main" style="margin-left:200px;margin-top:43px;">
+        <!-- Header -->
+        <input type="text" id="usernameSearchInput" placeholder="Search Username..." onkeyup="searchUser()">
+        <script>
+            function searchUser() {
+                var input, filter, table, tr, td, i, txtValue;
+                input = document.getElementById("usernameSearchInput");
+                filter = input.value.toUpperCase();
+                table = document.getElementById("UserTable");
+                tr = table.getElementsByTagName("tr");
+                for (i = 0; i < tr.length; i++) {
+                    td = tr[i].getElementsByTagName("td")[0];
+                    if (td) {
+                        txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                        } else {
+                            tr[i].style.display = "none";
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <button onclick="Download_All()">Download All</button>
+        <!-- Header -->
+
+        <!-- USER -->
+        <div class="w3-row-padding w3-center w3-margin-top">
+            <h5>Users</h5>
+            <div style="overflow-x: auto;">
+                <table class="w3-table w3-striped w3-white" id="UserTable">
+                    <!-- <thead>
+                        <tr>
+                            <th>Names</th>
+                            <th>Platform1</th>
+                            <th>Platform2</th>
+                            <th>Platform3</th>
+                            <th>Total</th>
+                            <th>Download</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Names</td>
+                            <td>Platform1</td>
+                            <td>Platform2</td>
+                            <td>Platform3</td>
+                            <td>Total</td>
+                            <td>Download</td>
+                        </tr>
+                    </tbody> -->
+                </table>
+            </div>
+        </div>
+        <!-- USER -->
+    </div>
+
+
+
+    <script>
+        const HTMLUserTable = document.getElementById("UserTable");
+
+        function sleep(milliseconds) {
+            var start = new Date().getTime();
+            for (var i = 0; i < 1e7; i++) {
+                if ((new Date().getTime() - start) > milliseconds){
+                break;
+                }
+            }
+        }
+
+        // [
+        //     {
+        //         "names": ["name1", "name2", "name3"],
+        //         "{platform1}": {{count}},
+        //         "{platform2}": "Trop récent",
+        //         "{platform3}": "-",
+        //         "total": {{countTotal}}
+        //     }
+        // ] 
+        // Sorted by total
+        var usersTracking = [];
+
+        function PageLoaded() {
+            console.log("PageLoaded");
+            ReloadTab();
+            searchUser();
+            console.log("PageLoaded, End");
+        }
+
+        function GetUsersTracking() {            
+            // [
+            //     {
+            //         "names": ["name1", "name2", "name3"],
+            //         "{platform1}": {{count}},
+            //         "{platform2}": "Trop récent",
+            //         "{platform3}": "-",
+            //         "total": {{countTotal}}
+            //     }
+            // ] 
+            // Sorted by total
+            
+            console.log("GetUsersTracking");
+            var users = User_Get_All();
+            console.log(users);
+
+
+            // {
+            //     "userID": {
+            //         "deviantart": 1
+            //     },
+            //     "userID2": {
+            //         "deviantart": 1,
+            //         "pixiv": 1
+            //     }
+            // }
+            Media_Count_All_Launch();
+            Media_Count_Wait();                  // On attend que le téléchargement se termine
+            var userTotalCount = Media_Count_All_Get();
+            console.log(userTotalCount);
+
+
+
+
+            var platforms = Platform_Get_All();
+            console.log(platforms);
+
+            usersTracking = [];
+            for (let i = 0; i < users.length; i++) {
+                console.log("GetUsersTracking : User " + (i+1) + " / " + users.length);
+                const user = users[i];
+                var userTracking = {};
+                userTracking["id"] = user["id"];
+                userTracking["names"] = user["names"];
+                userTracking["total"] = 0;
+                for (let j = 0; j < platforms.length; j++) {
+                    console.log("GetUsersTracking : User " + (i+1) + " / " + users.length + ", Platform " + (j+1) + " / " + platforms.length);
+                    const platformname = platforms[j];
+
+                    // Si l'utilisateur n'a pas la plateforme on met "-"
+                    if(users[i]["platforms"][platformname] == null){
+                        userTracking[platformname] = "-";
+                        continue;
+                    }
+
+                    // Si le dernier check est à moins d'un mois alors on met "Trop récent"
+                    var lastcheck = users[i]["platforms"][platformname]["lastDownload"];
+                    if(lastcheck != null){
+                        var lastcheckdate = new Date(lastcheck);
+                        var today = new Date();
+                        var diff = today - lastcheckdate;
+                        var diffDays = diff / (1000 * 60 * 60 * 24);
+                        if(diffDays < 30){
+                            userTracking[platformname] = "Trop récent";
+                            continue;
+                        }
+                    }
+
+                    // Sinon on lance la recherche et on met le nombre de nouveaux                    
+                    // var count = Media_Count(users[i]["id"], platformname);
+                    var count = userTotalCount[users[i]["id"]][platformname];
+                    userTracking["total"] += count;
+                    userTracking[platformname] = count;
+                }
+                usersTracking.push(userTracking);
+            }
+
+            console.log(usersTracking);
+
+            // Sort by total
+            usersTracking.sort(function (a, b) {
+                return b["total"] - a["total"];
+            });
+            console.log(usersTracking);
+            console.log("GetUsersTracking, End");
+            return;
+        }
+
+        function ReloadTab() {
+            // Pour la liste des plateformes, on met "-" si l'utilisateur n'est pas sur la platform
+            // Si l'utilisateur à la plateforme
+            //      Si le dernier check est à moins d'un mois alors on met "Trop récent"
+            //      Sinon on lance la recherche et on met le nombre de nouveaux
+            console.log("ReloadTab");
+
+            GetUsersTracking();
+            console.log(usersTracking);
+
+            var platforms = Platform_Get_All();
+            console.log(platforms);
+
+            HTMLUserTable.innerHTML = "";
+
+            var header = ""
+            header += "<thead><tr>";
+            header += "<th>Names</th>";
+            for (let i = 0; i < platforms.length; i++) {
+                const platformname = platforms[i];
+                header += "<th>" + platformname + "</th>";
+            }
+            header += "<th>Total</th>";
+            header += "<th>Download</th>";
+            header += "</tr></thead>";
+
+            content = "<tbody>";
+
+            for (let i = 0; i < usersTracking.length; i++) {
+                content += "<tr>";
+                content += "<td>" + usersTracking[i]["names"] + "</td>";
+                
+                for(let j = 0; j < platforms.length; j++){
+                    const platformname = platforms[j];
+                    content += "<td>"+ usersTracking[i][platformname] +"</td>";
+                }
+
+                content += "<td>" + usersTracking[i]["total"] + "</td>";
+                content += "<td><button onclick=\"Download('" + usersTracking[i]["id"] + "')\">Download</button></td>";
+            }
+
+            HTMLUserTable.innerHTML += header + content + "</tbody>";
+            console.log("ReloadTab, End");
+        }
+
+        function Download(userID){
+            console.log("Download, UserID :" + userID);
+            HTMLUserTable.innerHTML = "";
+            Media_Download(Number(userID));
+            Media_Download_Wait();                  // On attend que le téléchargement se termine
+
+            ReloadTab();
+            searchUser();
+            console.log("Download, End");
+            alert("Download Done");
+        }
+
+        function Download_All(){
+            console.log("Download_All");
+            HTMLUserTable.innerHTML = "";
+            for (let i = 0; i < usersTracking.length; i++) {
+                console.log("Download_All, User " + (i+1) + " / " + usersTracking.length);
+                const user = usersTracking[i];
+                Media_Download(Number(user["id"]));
+                Media_Download_Wait();                  // On attend que le téléchargement se termine
+            } 
+        }
+    </script>
+</body>
+
+</html>
