@@ -31,7 +31,7 @@
             <div class="w3-quarter">
               <div class="w3-container w3-blue w3-padding-16">
                 <div class="w3-right">
-                  <h3 id="nbTotalUser">Loading</h3>
+                  <h3 id="nb_total_account">Loading</h3>
                 </div>
                 <h4>Nombre de compte</h4>
               </div>
@@ -39,7 +39,7 @@
             <div class="w3-quarter">
               <div class="w3-container w3-green w3-padding-16">
                 <div class="w3-right">
-                  <h3 id="nbPlatform">Loading</h3>
+                  <h3 id="nb_total_platform">Loading</h3>
                 </div>
                 <h4>Nombre de platforme</h4>
               </div>
@@ -47,13 +47,21 @@
             <div class="w3-quarter">
               <div class="w3-container w3-red w3-padding-16">
                 <div class="w3-right">
-                  <h3 id="nbTags">Loading</h3>
+                  <h3 id="nb_total_repport">Loading</h3>
                 </div>
                 <h4>Nombre de repport</h4>
               </div>
             </div>
         </div>
         <!-- SUBJECT STATS -->
+
+        <!-- BUTTON TO REPPORTS PAGE -->
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-quarter">
+                <a href="/repports" class="w3-button w3-block w3-theme-l1">Repports</a>
+            </div>
+        </div>
+        <!-- BUTTON TO REPPORTS PAGE -->
 
           
         <!-- ACCOUNT -->
@@ -129,9 +137,9 @@
 
 
     <script>
-        const HTMLNbTotalUser = document.getElementById("nbTotalUser");
-        const HTMLNbPlatform = document.getElementById("nbPlatform");
-        const HTMLNbTags = document.getElementById("nbTags");
+        const HTML_NB_TOTAL_ACCOUNT = document.getElementById("nb_total_account");
+        const HTML_NB_PLATFORM = document.getElementById("nb_total_platform");
+        const HTML_NB_REPPORT = document.getElementById("nb_total_repport");
 
         function PageLoaded() {
             console.log("PageLoaded");
@@ -141,6 +149,15 @@
 
         function UpdateStats() {
             console.log("UpdateStats");
+
+            accounts = Account_Get_All();
+            HTML_NB_TOTAL_ACCOUNT.textContent = accounts.length;
+
+            platforms = Platform_Get_All();
+            HTML_NB_PLATFORM.textContent = platforms.length;
+
+            repports = Repport_Get_All();
+            HTML_NB_REPPORT.textContent = repports.length;
         }
 
         function ReloadTable() {

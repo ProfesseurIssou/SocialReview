@@ -19,11 +19,10 @@ class Base_Repport_Tag:
     id: int
     tag_name: str
 @dataclass
-class Base_Repport_Account:
+class Base_Account:
     id: int
     platform_id: int
     account_id: str
-    account_name: str
     account_url: str
 @dataclass
 class Base_Repport:
@@ -65,14 +64,20 @@ class Database:
         # Create the tables
         db.execute("CREATE TABLE IF NOT EXISTS platform (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, base_url TEXT NOT NULL);")
         db.execute("CREATE TABLE IF NOT EXISTS repport_tag (id INTEGER PRIMARY KEY AUTOINCREMENT, tag_name TEXT NOT NULL UNIQUE);")
-        db.execute("CREATE TABLE IF NOT EXISTS repport_account (id INTEGER PRIMARY KEY AUTOINCREMENT, platform_id INTEGER REFERENCES platform (id) ON DELETE CASCADE, account_id TEXT NOT NULL, account_name TEXT NOT NULL, account_url TEXT NOT NULL);")
+        db.execute("CREATE TABLE IF NOT EXISTS repport_account (id INTEGER PRIMARY KEY AUTOINCREMENT, platform_id INTEGER REFERENCES platform (id) ON DELETE CASCADE, account_id TEXT NOT NULL, account_url TEXT NOT NULL);")
         db.execute("CREATE TABLE IF NOT EXISTS repport (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER REFERENCES account (id) ON DELETE CASCADE, repport_date TEXT NOT NULL, repport_tag_id INTEGER REFERENCES tag (id) ON DELETE CASCADE, repport_text TEXT NOT NULL);")
 
         # Insert the default platforms
         db.execute("INSERT INTO platform (name) VALUES ('twitter');")
         db.execute("INSERT INTO platform (name) VALUES ('meta');")
         db.execute("INSERT INTO platform (name) VALUES ('discord');")
-        
+
+        # Insert the default repport tags
+        db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Autre');")
+        db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Harcèlement');")
+        db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Discrimination');")
+        db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Arnaque');")
+
         db.close()
         return
 
@@ -160,15 +165,15 @@ class Database:
     ####################
 
     ### REPPORT_ACCOUNT ###
-    def RepportAccount_GetAll(self) -> list[Base_Repport_Account]:
+    def Account_GetAll(self) -> list[Base_Account]:
         """
             Get all the repport accounts
             Return:
                 list[Base_Repport_Account]
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_name, account_url FROM repport_account;")
-        return [Base_Repport_Account(id=result[0], platform_id=result[1], account_id=result[2], account_name=result[3], account_url=result[4]) for result in results]
-    def RepportAccount_GetBy_ID(self, id: int) -> Union[Base_Repport_Account, None]:
+        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM repport_account;")
+        return [Base_Account(id=result[0], platform_id=result[1], account_id=result[2], account_url=result[3]) for result in results]
+    def Account_GetBy_ID(self, id: int) -> Union[Base_Account, None]:
         """
             Get the repport account by id
             Params:
@@ -176,12 +181,12 @@ class Database:
             Return:
                 Base_Repport_Account or None
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_name, account_url FROM repport_account WHERE id = ?;", [id])
+        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM repport_account WHERE id = ?;", [id])
         if results == []:
             return None
         result: tuple = results[0]
-        return Base_Repport_Account(id=result[0], platform_id=result[1], account_id=result[2], account_name=result[3], account_url=result[4])
-    def RepportAccount_GetBy_AccountID(self, account_id: str) -> Union[Base_Repport_Account, None]:
+        return Base_Account(id=result[0], platform_id=result[1], account_id=result[2], account_url=result[3])
+    def Account_GetBy_AccountID(self, account_id: str) -> Union[Base_Account, None]:
         """
             Get the repport account by account id
             Params:
@@ -189,22 +194,21 @@ class Database:
             Return:
                 Base_Repport_Account or None
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_name, account_url FROM repport_account WHERE account_id = ?;", [account_id])
+        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM repport_account WHERE account_id = ?;", [account_id])
         if results == []:
             return None
         result: tuple = results[0]
-        return Base_Repport_Account(id=result[0], platform_id=result[1], account_id=result[2], account_name=result[3], account_url=result[4])
+        return Base_Account(id=result[0], platform_id=result[1], account_id=result[2], account_url=result[3])
     
-    def RepportAccount_Insert(self, platform_id: int, account_id: str, account_name: str, account_url: str) -> None:
+    def Account_Insert(self, platform_id: int, account_id: str, account_url: str) -> None:
         """
             Insert the repport account
             Params:
                 platform_id: int
                 account_id: str
-                account_name: str
                 account_url: str
         """
-        self.db.execute("INSERT INTO repport_account (platform_id, account_id, account_name, account_url) VALUES (?, ?, ?, ?);", [platform_id, account_id, account_name, account_url])
+        self.db.execute("INSERT INTO repport_account (platform_id, account_id, account_url) VALUES (?, ?, ?, ?);", [platform_id, account_id, account_url])
         return
     #####################
 

@@ -26,20 +26,37 @@
     <!-- Page Container -->
     <div class="w3-main" style="margin-left:200px;margin-top:43px;">
 
-        <!-- RETURN BUTTON -->
+        <!-- SUBJECT STATS -->
         <div class="w3-row-padding w3-margin-bottom">
             <div class="w3-quarter">
-                <a href="/" class="w3-button w3-block w3-theme-l1">Retour</a>
+              <div class="w3-container w3-blue w3-padding-16">
+                <div class="w3-right">
+                  <h3 id="nb_total_account">Loading</h3>
+                </div>
+                <h4>Nombre de compte</h4>
+              </div>
+            </div>
+            <div class="w3-quarter">
+              <div class="w3-container w3-green w3-padding-16">
+                <div class="w3-right">
+                  <h3 id="nb_total_platform">Loading</h3>
+                </div>
+                <h4>Nombre de platforme</h4>
+              </div>
+            </div>
+            <div class="w3-quarter">
+              <div class="w3-container w3-red w3-padding-16">
+                <div class="w3-right">
+                  <h3 id="nb_total_repport">Loading</h3>
+                </div>
+                <h4>Nombre de repport</h4>
+              </div>
             </div>
         </div>
-        <!-- RETURN BUTTON -->
+        <!-- SUBJECT STATS -->
 
-
-        <!-- GRAPH EVOLUTION REPPORTS -->
-        <!-- GRAPH EVOLUTION REPPORTS -->
           
-
-        <!-- FORM -->
+        <!-- ACCOUNT -->
         <div class="w3-row-padding w3-center w3-margin-top">
             <h5>Accounts</h5>
             <!-- SEARCH BAR -->
@@ -87,18 +104,16 @@
             <table class="w3-table w3-striped w3-white" id="accounts_table">
                 <!-- <thead>
                     <tr>
-                        <th>Username</th>
-                        <th>Platform</th>
                         <th>Url</th>
+                        <th>Platform</th>
                         <th>Score</th>
                         <th>Profile</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Username</td>
-                        <td>Platform</td>
                         <td>Url</td>
+                        <td>Platform</td>
                         <td>Score</td>
                         <td><a href="account/{user_id}">Profile</a></td>
                     </tr>
@@ -139,9 +154,10 @@
             console.log("ReloadTable");
             const table = document.getElementById("accounts_table");
             table.innerHTML = "";
-            const headers = ["Username", "Platform", "Url", "Score", "Profile"];
-            const data = [["test", "Twitter", "https://twitter/test", "9999"]];
+            const headers = ["Url", "Platform", "Score", "Profile"];
 
+            accounts = Account_Get_All();
+            // id: number, name: string, platform: string, url: string
 
             const tr = document.createElement("tr");
             headers.forEach(header => {
@@ -154,17 +170,30 @@
             const tbody = document.createElement("tbody");
             data.forEach(row => {
                 const tr = document.createElement("tr");
-                row.forEach(cell => {
-                    const td = document.createElement("td");
-                    td.textContent = cell;
-                    tr.appendChild(td);
-                });
-                const td = document.createElement("td");
+                
+                // Url
+                const url_td = document.createElement("td");
+                url_td.textContent = row.url;
+
+                // Platform
+                const platform_td = document.createElement("td");
+                platform_td.textContent = row.platform;
+
+                // Score
+                const score_td = document.createElement("td");
+                score_td.textContent = "9999";
+
+                // Profile
+                const profile_td = document.createElement("td");
                 const a = document.createElement("a");
-                a.href = "account/{user_id}";
+                a.href = "account/" + row.id;
                 a.textContent = "Profile";
-                td.appendChild(a);
-                tr.appendChild(td);
+
+                tr.appendChild(url_td);
+                tr.appendChild(platform_td);
+                tr.appendChild(score_td);
+                tr.appendChild(profile_td);
+
                 tbody.appendChild(tr);
             });
             table.appendChild(tbody);
