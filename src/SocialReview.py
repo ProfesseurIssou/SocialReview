@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+import numpy as np
 from typing import Union
-from datetime import datetime
+from datetime import datetime, date
 try:
     from Database import Database, Base_Platform, Base_Report_Tag, Base_Report
 except ImportError:
@@ -85,11 +86,37 @@ def score(report_account_id: int):
             ]
         }
     """
+    reports = db.Report_GetBy_AccountID(report_account_id)
+
+    score = reputationAlgorithm(reports)
+
     return {
-        "score": 0,
+        "score": score,
         "interpretation": "No report",
         "reports": []
     }
+
+def reputationAlgorithm (reports):
+    numbers = []
+    dateSommes = [[]]
+    for report in reports :
+        found = False
+        for dataSomme in dateSommes:
+            if date.__eq__(dateSomme[0], report.report_date) :
+                dateSomme[1] = dateSomme[1] + 1
+                found = True
+        if not found:
+            dateSommes.append([report.report_date, 1])
+
+    dateSommes = sorted(dateSommes, key=lambda x: x[0])
+    for dateSomme in dateSommes:
+        numbers.append(dateSomme[1])
+    
+    j = len(numbers)
+    numerator = sum(np.log10(numbers[i]) * (j - (i + 1)) for i in range(j))
+    denominator = sum(numbers)
+    
+    return numerator / denominator if denominator != 0 else None
 
 @app.route('/api/platforms', methods=['GET'])
 def get_platforms():
