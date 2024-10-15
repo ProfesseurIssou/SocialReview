@@ -64,7 +64,7 @@ class Database:
         db.execute("CREATE TABLE IF NOT EXISTS platform (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, base_url TEXT NOT NULL);")
         db.execute("CREATE TABLE IF NOT EXISTS report_tag (id INTEGER PRIMARY KEY AUTOINCREMENT, tag_name TEXT NOT NULL UNIQUE);")
         db.execute("CREATE TABLE IF NOT EXISTS report_account (id INTEGER PRIMARY KEY AUTOINCREMENT, platform_id INTEGER REFERENCES platform (id) ON DELETE CASCADE, account_id TEXT NOT NULL, account_url TEXT NOT NULL);")
-        db.execute("CREATE TABLE IF NOT EXISTS report (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER REFERENCES account (id) ON DELETE CASCADE, report_date TEXT NOT NULL, report_tag_id INTEGER REFERENCES tag (id) ON DELETE CASCADE, report_text TEXT NOT NULL);")
+        db.execute("CREATE TABLE IF NOT EXISTS report (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER REFERENCES report_account (id) ON DELETE CASCADE, report_date TEXT NOT NULL, report_tag_id INTEGER REFERENCES report_tag (id) ON DELETE CASCADE, report_text TEXT NOT NULL);")
 
         # Insert the default platforms
         db.execute("INSERT INTO platform (name, base_url) VALUES ('twitter', 'https://twitter.com/');")

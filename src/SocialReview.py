@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import numpy as np
 from typing import Union
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 try:
     from Database import Database, Base_Platform, Base_Report_Tag, Base_Report
 except ImportError:
@@ -86,37 +86,82 @@ def score(report_account_id: int):
             ]
         }
     """
+
+    def Algorithme(date_list: list[datetime.date]) -> float:
+        """
+            - Algorithme de calcul de score
+            - Paramètres: liste de dates [date1, date2, ...]
+            - Retourne: score float
+        """
+        if date_list == []:
+            return 0
+        # Création d'un dictionnaire de dates et de leur fréquence
+        date_count: dict[datetime.date, int] = {}
+        for date in date_list:
+            if date in date_count:
+                date_count[date] += 1
+            else:
+                date_count[date] = 1
+
+        # Tri du dictionnaire par date
+        date_count = dict(sorted(date_count.items(), key=lambda item: item[0]))
+
+        # Récupération de la première et dernière date
+        first_date = list(date_count.keys())[0]
+        last_date = datetime.now().date()
+
+        # Création d'une liste de dates entre la première et la dernière date au format YYYY-MM-DD
+        date_range = [first_date + timedelta(days=x) for x in range((last_date - first_date).days + 1)]
+
+        # Création d'une liste de fréquences de dates
+        date_freq = [date_count.get(date, 0) for date in date_range]
+
+        # Création de la courbe de diminution (10/(x+1))
+        j = len(date_freq)
+        decrease_curve = [0.5/(i+0.1) for i in range(j)]
+
+        # Calcul du score (somme du jour * valeur courbe de diminution du jour)
+        date_freq = list(reversed(date_freq))
+        score = np.sum(np.array(date_freq) * np.array(decrease_curve))
+        return score
+    
     reports = db.Report_GetBy_AccountID(report_account_id)
 
-    score = reputationAlgorithm(reports)
+    date_list = [report.report_date for report in reports]
+    score = Algorithme(date_list)
+    
+
+    # Palié pour l'interpretation
+    """
+        "Aucun rapport" = 0
+        "Suspect" = 0>score>5
+        "Troublefête" = 5>score>10
+        "Problèmatique" = 10>score>15
+    """
+    if score == 0:
+        interpretation = "Aucun rapport"
+    elif score > 0 and score < 5:
+        interpretation = "Suspect"
+    elif score >= 5 and score < 10:
+        interpretation = "Troublefête"
+    elif score >= 10 and score < 15:
+        interpretation = "Problèmatique"
+    else:
+        interpretation = "Dangereux"
 
     return {
         "score": score,
-        "interpretation": "No report",
-        "reports": []
+        "interpretation": interpretation,
+        "reports": reports
     }
 
-def reputationAlgorithm (reports):
-    numbers = []
-    dateSommes = [[]]
-    for report in reports :
-        found = False
-        for dataSomme in dateSommes:
-            if date.__eq__(dateSomme[0], report.report_date) :
-                dateSomme[1] = dateSomme[1] + 1
-                found = True
-        if not found:
-            dateSommes.append([report.report_date, 1])
 
-    dateSommes = sorted(dateSommes, key=lambda x: x[0])
-    for dateSomme in dateSommes:
-        numbers.append(dateSomme[1])
-    
-    j = len(numbers)
-    numerator = sum(np.log10(numbers[i]) * (j - (i + 1)) for i in range(j))
-    denominator = sum(numbers)
-    
-    return numerator / denominator if denominator != 0 else None
+
+
+
+
+
+
 
 @app.route('/api/platforms', methods=['GET'])
 def get_platforms():
