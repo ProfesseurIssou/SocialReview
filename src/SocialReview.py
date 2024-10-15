@@ -28,6 +28,55 @@ def MOCK_SEARCH():
 
 
 
+def sanitize_text(text: str) -> str:
+    """
+    Cette fonction prend un texte en entrée et remplace certaines parties par des # :
+    - Émojis
+    - Adresse email
+    - Numéro de téléphone
+    - Lien externe
+    - Nom ou prénom
+    - Ascii art (en se basant sur des caractères souvent utilisés)
+    """
+
+    # Remplacer les émojis
+    def replace_emoji(text: str) -> str:
+        return ''.join('#' if emoji.is_emoji(char) else char for char in text)
+
+    # Remplacer les emails
+    def replace_email(text: str) -> str:
+        email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        return re.sub(email_regex, '#', text)
+
+    # Remplacer les numéros de téléphone
+    def replace_phone(text: str) -> str:
+        phone_regex = r'(\+?\d{1,2}[-.\s]?)?(\(?\d{1,4}\)?[-.\s]?)?(\d{1,4}[-.\s]?){2,3}\d{1,4}'
+        return re.sub(phone_regex, '#', text)
+
+    # Remplacer les liens externes
+    def replace_url(text: str) -> str:
+        url_regex = r'(https?://[^\s]+)'
+        return re.sub(url_regex, '#', text)
+
+    # Remplacer les noms ou prénoms (en supposant des noms et prénoms communs français)
+    def replace_names(text: str) -> str:
+        names = ['Jean', 'Marie', 'Pierre', 'Paul', 'Sophie', 'Lucas', 'Emma', 'Chloé']  # Vous pouvez enrichir cette liste
+        for name in names:
+            text = re.sub(r'\b' + name + r'\b', '#', text, flags=re.IGNORECASE)
+        return text
+
+    # Chaînage des remplacements
+    text = replace_emoji(text)
+    text = replace_email(text)
+    text = replace_phone(text)
+    text = replace_url(text)
+    text = replace_names(text)
+
+    return text
+
+
+
+
 # ROUTE #
 @app.route('/')
 def index():
@@ -63,7 +112,7 @@ def search():
     
     results = MOCK_SEARCH()
     # filter results by username
-    results = [result for result in results if username in result["username"]]
+    results = [result for result in results if username.lower() in result["username"].lower()]
 
     return results
 
@@ -220,18 +269,22 @@ def post_report():
             "account_id": int,
             "tag_id": int,
             "text": str
+        }
     """
     report = request.get_json()
     account_id = report.get("account_id")
     tag_id = report.get("tag_id")
     text = report.get("text")
+
+
+
     
 
     db.Report_Insert(
         account_id=account_id,
         report_date=datetime.now(),
         report_tag_id=tag_id,
-        report_text=text
+        report_text=sanitize_text(text)
     )
     return report
 #######
