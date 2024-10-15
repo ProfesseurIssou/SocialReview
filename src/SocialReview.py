@@ -6,7 +6,8 @@ try:
     from Database import Database, Base_Platform, Base_Report_Tag, Base_Report
 except ImportError:
     from .Database import Database, Base_Platform, Base_Report_Tag, Base_Report
-
+import re
+import emoji
 
 app = Flask(__name__)
 db = Database()
