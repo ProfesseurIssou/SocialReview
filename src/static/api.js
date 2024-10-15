@@ -1,6 +1,6 @@
 /**
  * Récupérer la liste des comptes
- * @returns {Array<{id: number, username: string, platform: string, url: string}>}
+ * @returns {Array<{id: number, username: string, platform_id: string, url: string}>}
 */
 function Account_Get_All(){
     var accounts = [];
@@ -49,22 +49,37 @@ function Platform_Get_All(){
 
 
 /**
- * Récupérer la liste des repports
- * @returns {Array<{id: number, account_id: number, repport_date: string, repport_tag_id: number, repport_text: string}>}
+ * Récupérer la liste des reports
+ * @returns {Array<{id: number, account_id: number, report_date: string, report_tag_id: number, report_text: string}>}
 */
-function Repport_Get_All(){
-    var repports = [];
+function Report_Get_All(){
+    var reports = [];
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/api/repports', false);
+    xhr.open('GET', '/api/reports', false);
     xhr.send();
     console.log(xhr.responseText);
     if (xhr.status == 200) {
-        repports = JSON.parse(xhr.responseText);
+        reports = JSON.parse(xhr.responseText);
     }
-    return repports;
+    return reports;
 }
 
 
+/**
+ * Récupérer la liste des tags
+ * @returns {Array<{id: number, tag_name: string}>}
+*/
+function Tag_Get_All(){
+    var tags = [];
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/tags', false);
+    xhr.send();
+    console.log(xhr.responseText);
+    if (xhr.status == 200) {
+        tags = JSON.parse(xhr.responseText);
+    }
+    return tags;
+}
 
 
 /**
@@ -86,3 +101,34 @@ function Account_Search(username){
 }
 
 
+/**
+ * Get score
+ * @param {score: number, interpretation: string, reports: Array<{id: number, tag: string, text: string, date: string}>} report_account_id
+ * @returns {number}
+*/
+function Account_Get_Score(report_account_id){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/score/'+report_account_id, false);
+    xhr.send();
+    console.log(xhr.responseText);
+    if (xhr.status == 200) {
+        return JSON.parse(xhr.responseText);
+    }
+    return null;
+}
+
+
+/**
+ * Send report
+ * @param {number} account_id
+ * @param {number} tag_id
+ * @param {string} text
+ * @returns {boolean}
+*/
+function Report_Create(account_id, tag_id, text){
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/report', false);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify({account_id: account_id, tag_id: tag_id, text: text}));
+    return xhr.status == 200;
+}

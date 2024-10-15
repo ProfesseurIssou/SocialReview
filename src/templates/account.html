@@ -13,7 +13,7 @@
 </head>
 
 <body onload="PageLoaded()">
-    <input type="hidden" id="repport_account_id" value={{ repport_account_id }}>
+    <input type="hidden" id="report_account_id" value={{ report_account_id }}>
 
     <!-- Header -->
     <header class="w3-container w3-theme w3-padding" id="myHeader">
@@ -35,76 +35,154 @@
         </div>
         <!-- RETURN BUTTON -->
 
+        <!-- ACCOUNT -->
+        <div class="w3-row-padding w3-center w3-margin-top">
+            <h5>Account</h5>
+            <p>Plateforme: <span id="account_platform">Loading</span></p>
+            <p>Url: <span id="account_url">Loading</span></p>
+            <p>Nombre de report: <span id="nb_report">Loading</span></p>
+            <p>Score: <span id="score">Loading</span></p>
+            <p>Interprétation: <span id="score_interpretation">Loading</span></p>
+        </div>
+        <!-- ACCOUNT -->
 
-        <!-- GRAPH EVOLUTION REPPORTS -->
-        
-        <!-- GRAPH EVOLUTION REPPORTS -->
+        <!-- REPORT FORM -->
+        <div class="w3-row-padding w3-center w3-margin-top">
+            <h5>Report</h5>
+            <select name="tag" id="tags_select">
+                <option value="" disabled selected>Select a tag</option>
+            </select>
+            <input type="text" name="text" placeholder="Text" id="input_text">
+            <button class="w3-button w3-theme-l1" onclick="SendReport()">Send</button>
+        </div>
+        <!-- REPORT FORM -->
           
 
-        <!-- FORM -->
+        <!-- TABLE -->
         <div class="w3-row-padding w3-center w3-margin-top">
-            <h5>Accounts</h5>
+            <h5>Reports</h5>
 
-            <table class="w3-table w3-striped w3-white" id="repports_table">
+            <table class="w3-table w3-striped w3-white" id="reports_table">
                 <!-- <thead>
                     <tr>
-                        <th>Username</th>
-                        <th>Platform</th>
-                        <th>Url</th>
-                        <th>Score</th>
-                        <th>Profile</th>
+                        <th>Date</th>
+                        <th>Tag</th>
+                        <th>Text</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Username</td>
-                        <td>Platform</td>
-                        <td>Url</td>
-                        <td>Score</td>
-                        <td><a href="account/{user_id}">Profile</a></td>
+                        <td>Date</td>
+                        <td>Tag</td>
+                        <td>Text</td>
                     </tr>
                 </tbody> -->
             </table>
         </div>
-        <!-- ACCOUNT -->
+        <!-- TABLE -->
 
     </div>
 
 
 
     <script>
+        const HTML_ACCOUNT_ID = document.getElementById("report_account_id");
 
+        const HTML_ACCOUNT_PLATFORM = document.getElementById("account_platform");
+        const HTML_ACCOUNT_URL = document.getElementById("account_url");
+        const HTML_NB_REPORT = document.getElementById("nb_report");
+        const HTML_SCORE = document.getElementById("score");
+        const HTML_SCORE_INTERPRETATION = document.getElementById("score_interpretation");
 
-        const HTML_NB_TOTAL_ACCOUNT = document.getElementById("nb_total_account");
-        const HTML_NB_PLATFORM = document.getElementById("nb_total_platform");
-        const HTML_NB_REPPORT = document.getElementById("nb_total_repport");
+        const HTML_TAGS_SELECT = document.getElementById("tags_select");
+        const HTML_TEXT_INPUT = document.getElementById("input_text");
+
+        const HTML_REPORTS_TABLE = document.getElementById("reports_table");
+
 
         function PageLoaded() {
             console.log("PageLoaded");
+            LoadTags();
             UpdateStats();
             ReloadTable();
+        }
+
+        function LoadTags() {
+            console.log("LoadTags");
+            const tags = Tag_Get_All();
+            HTML_TAGS_SELECT.innerHTML = '<option value="" disabled selected>Select a tag</option>';
+            tags.forEach(tag => {
+                const option = document.createElement("option");
+                option.value = tag.tag_name;
+                option.textContent = tag.tag_name;
+                HTML_TAGS_SELECT.appendChild(option);
+            });
         }
 
         function UpdateStats() {
             console.log("UpdateStats");
 
+            report_account_id = document.getElementById("report_account_id").value;
+
             accounts = Account_Get_All();
-            HTML_NB_TOTAL_ACCOUNT.textContent = accounts.length;
+            account = null;
+            for (let i = 0; i < accounts.length; i++) {
+                if (accounts[i].id == report_account_id) {
+                    account = accounts[i];
+                }
+            }
 
+            platform = null;
             platforms = Platform_Get_All();
-            HTML_NB_PLATFORM.textContent = platforms.length;
+            for (let i = 0; i < platforms.length; i++) {
+                if (platforms[i].id == account.platform_id) {
+                    platform = platforms[i];
+                }
+            }
 
-            repports = Repport_Get_All();
-            HTML_NB_REPPORT.textContent = repports.length;
+            HTML_ACCOUNT_PLATFORM.textContent = platform.name;
+            HTML_ACCOUNT_URL.textContent = account.account_url;
+
+
+
+
+
+            reports = Report_Get_All();
+            nb_report = 0;
+            for (let i = 0; i < reports.length; i++) {
+                if (reports[i].id == report_account_id) {
+                    nb_report++;
+                }
+            }
+            HTML_NB_REPORT.textContent = nb_report;
+
+
+            score_data = Account_Get_Score(report_account_id);
+            score = 0;
+            if (score_data == null) {
+                score = "N/A";
+            } else {
+                score = score_data.score;
+            }
+
+            HTML_SCORE.textContent = score;
+            HTML_SCORE_INTERPRETATION.textContent = score_data.interpretation;
         }
 
         function ReloadTable() {
             console.log("ReloadTable");
-            const table = document.getElementById("accounts_table");
-            table.innerHTML = "";
-            const headers = ["Username", "Platform", "Url", "Score", "Profile"];
-            const data = [["test", "Twitter", "https://twitter/test", "9999"]];
+            const account_id = Number(HTML_ACCOUNT_ID.value);
 
+            HTML_REPORTS_TABLE.innerHTML = "";
+            const headers = ["Date", "Tag", "Text"];
+
+            const reports = Report_Get_All();
+            const data = [];
+            for (let i = 0; i < reports.length; i++) {
+                if (reports[i].account_id == account_id) {
+                    data.push([reports[i].report_date, reports[i].report_tag, reports[i].report_text]);
+                }
+            }
 
             const tr = document.createElement("tr");
             headers.forEach(header => {
@@ -112,7 +190,7 @@
                 th.textContent = header;
                 tr.appendChild(th);
             });
-            table.appendChild(tr);
+            HTML_REPORTS_TABLE.appendChild(tr);
             
             const tbody = document.createElement("tbody");
             data.forEach(row => {
@@ -123,16 +201,34 @@
                     tr.appendChild(td);
                 });
                 const td = document.createElement("td");
-                const a = document.createElement("a");
-                a.href = "account/{user_id}";
-                a.textContent = "Profile";
-                td.appendChild(a);
                 tr.appendChild(td);
                 tbody.appendChild(tr);
             });
-            table.appendChild(tbody);
+            HTML_REPORTS_TABLE.appendChild(tbody);
         }
 
+        function SendReport(){
+            console.log("SendReport");
+            const account_id = Number(HTML_ACCOUNT_ID.value);
+            const tag = HTML_TAGS_SELECT.value;
+            const text = HTML_TEXT_INPUT.value;
+            tag_id = null;
+            tags = Tag_Get_All();
+            for (let i = 0; i < tags.length; i++) {
+                if (tags[i].tag_name == tag) {
+                    tag_id = tags[i].id;
+                }
+            }
+            if (tag_id == null) {
+                alert("Tag not found");
+                return;
+            }
+            Report_Create(account_id, tag_id, text);
+
+            HTML_TAGS_SELECT.value = "";
+            HTML_TEXT_INPUT.value = "";
+            ReloadTable();
+        }
 
     </script>
 </body>

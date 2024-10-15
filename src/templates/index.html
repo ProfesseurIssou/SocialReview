@@ -47,9 +47,9 @@
             <div class="w3-quarter">
               <div class="w3-container w3-red w3-padding-16">
                 <div class="w3-right">
-                  <h3 id="nb_total_repport">Loading</h3>
+                  <h3 id="nb_total_report">Loading</h3>
                 </div>
-                <h4>Nombre de repport</h4>
+                <h4>Nombre de report</h4>
               </div>
             </div>
         </div>
@@ -91,7 +91,7 @@
     <script>
         const HTML_NB_TOTAL_ACCOUNT = document.getElementById("nb_total_account");
         const HTML_NB_PLATFORM = document.getElementById("nb_total_platform");
-        const HTML_NB_REPPORT = document.getElementById("nb_total_repport");
+        const HTML_NB_REPORT = document.getElementById("nb_total_report");
 
         function PageLoaded() {
             console.log("PageLoaded");
@@ -108,8 +108,8 @@
             platforms = Platform_Get_All();
             HTML_NB_PLATFORM.textContent = platforms.length;
 
-            repports = Repport_Get_All();
-            HTML_NB_REPPORT.textContent = repports.length;
+            reports = Report_Get_All();
+            HTML_NB_REPORT.textContent = reports.length;
         }
 
         function ReloadTable() {

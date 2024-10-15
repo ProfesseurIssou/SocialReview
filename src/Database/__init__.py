@@ -15,7 +15,7 @@ class Base_Platform:
     name: str
     base_url: str
 @dataclass
-class Base_Repport_Tag:
+class Base_Report_Tag:
     id: int
     tag_name: str
 @dataclass
@@ -25,12 +25,12 @@ class Base_Account:
     account_id: str
     account_url: str
 @dataclass
-class Base_Repport:
+class Base_Report:
     id: int
     account_id: int
-    repport_date: date
-    repport_tag_id: int
-    repport_text: str
+    report_date: date
+    report_tag_id: int
+    report_text: str
 
 
 
@@ -63,9 +63,9 @@ class Database:
 
         # Create the tables
         db.execute("CREATE TABLE IF NOT EXISTS platform (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, base_url TEXT NOT NULL);")
-        db.execute("CREATE TABLE IF NOT EXISTS repport_tag (id INTEGER PRIMARY KEY AUTOINCREMENT, tag_name TEXT NOT NULL UNIQUE);")
-        db.execute("CREATE TABLE IF NOT EXISTS repport_account (id INTEGER PRIMARY KEY AUTOINCREMENT, platform_id INTEGER REFERENCES platform (id) ON DELETE CASCADE, account_id TEXT NOT NULL, account_url TEXT NOT NULL);")
-        db.execute("CREATE TABLE IF NOT EXISTS repport (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER REFERENCES account (id) ON DELETE CASCADE, repport_date TEXT NOT NULL, repport_tag_id INTEGER REFERENCES tag (id) ON DELETE CASCADE, repport_text TEXT NOT NULL);")
+        db.execute("CREATE TABLE IF NOT EXISTS report_tag (id INTEGER PRIMARY KEY AUTOINCREMENT, tag_name TEXT NOT NULL UNIQUE);")
+        db.execute("CREATE TABLE IF NOT EXISTS report_account (id INTEGER PRIMARY KEY AUTOINCREMENT, platform_id INTEGER REFERENCES platform (id) ON DELETE CASCADE, account_id TEXT NOT NULL, account_url TEXT NOT NULL);")
+        db.execute("CREATE TABLE IF NOT EXISTS report (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER REFERENCES account (id) ON DELETE CASCADE, report_date TEXT NOT NULL, report_tag_id INTEGER REFERENCES tag (id) ON DELETE CASCADE, report_text TEXT NOT NULL);")
 
         # Insert the default platforms
         db.execute("INSERT INTO platform (name, base_url) VALUES ('twitter', 'https://twitter.com/');")
@@ -73,11 +73,11 @@ class Database:
         db.execute("INSERT INTO platform (name, base_url) VALUES ('discord', 'https://discord.com/');")
         db.execute("INSERT INTO platform (name, base_url) VALUES ('instagram', 'https://instagram.com/');")
 
-        # Insert the default repport tags
-        db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Autre');")
-        db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Harcèlement');")
-        db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Discrimination');")
-        db.execute("INSERT INTO repport_tag (tag_name) VALUES ('Arnaque');")
+        # Insert the default report tags
+        db.execute("INSERT INTO report_tag (tag_name) VALUES ('Autre');")
+        db.execute("INSERT INTO report_tag (tag_name) VALUES ('Harcèlement');")
+        db.execute("INSERT INTO report_tag (tag_name) VALUES ('Discrimination');")
+        db.execute("INSERT INTO report_tag (tag_name) VALUES ('Arnaque');")
 
         db.close()
         return
@@ -119,83 +119,83 @@ class Database:
         return Base_Platform(id=result[0], name=result[1], base_url=result[2])
     ################
 
-    ### REPPORT_TAG ###
-    def RepportTag_GetAll(self) -> list[Base_Repport_Tag]:
+    ### REPORT_TAG ###
+    def ReportTag_GetAll(self) -> list[Base_Report_Tag]:
         """
-            Get all the repport tags
+            Get all the report tags
             Return:
-                list[Base_Repport_Tag]
+                list[Base_Report_Tag]
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, tag_name FROM repport_tag;")
-        return [Base_Repport_Tag(id=result[0], tag_name=result[1]) for result in results]
-    def RepportTag_GetBy_ID(self, id: int) -> Union[Base_Repport_Tag, None]:
+        results: list[list[tuple]] = self.db.execute("SELECT id, tag_name FROM report_tag;")
+        return [Base_Report_Tag(id=result[0], tag_name=result[1]) for result in results]
+    def ReportTag_GetBy_ID(self, id: int) -> Union[Base_Report_Tag, None]:
         """
-            Get the repport tag by id
+            Get the report tag by id
             Params:
                 id: int
             Return:
-                Base_Repport_Tag or None
+                Base_Report_Tag or None
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, tag_name FROM repport_tag WHERE id = ?;", [id])
+        results: list[list[tuple]] = self.db.execute("SELECT id, tag_name FROM report_tag WHERE id = ?;", [id])
         if results == []:
             return None
         result: tuple = results[0]
-        return Base_Repport_Tag(id=result[0], tag_name=result[1])
-    def RepportTag_GetBy_Name(self, tag_name: str) -> Union[Base_Repport_Tag, None]:
+        return Base_Report_Tag(id=result[0], tag_name=result[1])
+    def ReportTag_GetBy_Name(self, tag_name: str) -> Union[Base_Report_Tag, None]:
         """
-            Get the repport tag by name
+            Get the report tag by name
             Params:
                 tag_name: str
             Return:
-                Base_Repport_Tag or None
+                Base_Report_Tag or None
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, tag_name FROM repport_tag WHERE tag_name = ?;", [tag_name])
+        results: list[list[tuple]] = self.db.execute("SELECT id, tag_name FROM report_tag WHERE tag_name = ?;", [tag_name])
         if results == []:
             return None
         result: tuple = results[0]
-        return Base_Repport_Tag(id=result[0], tag_name=result[1])
+        return Base_Report_Tag(id=result[0], tag_name=result[1])
     
-    def RepportTag_Insert(self, tag_name: str) -> None:
+    def ReportTag_Insert(self, tag_name: str) -> None:
         """
-            Insert the repport tag
+            Insert the report tag
             Params:
                 tag_name: str
         """
-        self.db.execute("INSERT INTO repport_tag (tag_name) VALUES (?);", [tag_name])
+        self.db.execute("INSERT INTO report_tag (tag_name) VALUES (?);", [tag_name])
         return
     ####################
 
-    ### REPPORT_ACCOUNT ###
+    ### REPORT_ACCOUNT ###
     def Account_GetAll(self) -> list[Base_Account]:
         """
-            Get all the repport accounts
+            Get all the report accounts
             Return:
-                list[Base_Repport_Account]
+                list[Base_Report_Account]
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM repport_account;")
+        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM report_account;")
         return [Base_Account(id=result[0], platform_id=result[1], account_id=result[2], account_url=result[3]) for result in results]
     def Account_GetBy_ID(self, id: int) -> Union[Base_Account, None]:
         """
-            Get the repport account by id
+            Get the report account by id
             Params:
                 id: int
             Return:
-                Base_Repport_Account or None
+                Base_Report_Account or None
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM repport_account WHERE id = ?;", [id])
+        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM report_account WHERE id = ?;", [id])
         if results == []:
             return None
         result: tuple = results[0]
         return Base_Account(id=result[0], platform_id=result[1], account_id=result[2], account_url=result[3])
     def Account_GetBy_AccountID(self, account_id: str) -> Union[Base_Account, None]:
         """
-            Get the repport account by account id
+            Get the report account by account id
             Params:
                 account_id: str
             Return:
-                Base_Repport_Account or None
+                Base_Report_Account or None
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM repport_account WHERE account_id = ?;", [account_id])
+        results: list[list[tuple]] = self.db.execute("SELECT id, platform_id, account_id, account_url FROM report_account WHERE account_id = ?;", [account_id])
         if results == []:
             return None
         result: tuple = results[0]
@@ -203,68 +203,68 @@ class Database:
     
     def Account_Insert(self, platform_id: int, account_id: str, account_url: str) -> None:
         """
-            Insert the repport account
+            Insert the report account
             Params:
                 platform_id: int
                 account_id: str
                 account_url: str
         """
-        self.db.execute("INSERT INTO repport_account (platform_id, account_id, account_url) VALUES (?, ?, ?);", [platform_id, account_id, account_url])
+        self.db.execute("INSERT INTO report_account (platform_id, account_id, account_url) VALUES (?, ?, ?);", [platform_id, account_id, account_url])
         return
     #####################
 
-    ### REPPORT ###
-    def Repport_GetAll(self) -> list[Base_Repport]:
+    ### REPORT ###
+    def Report_GetAll(self) -> list[Base_Report]:
         """
-            Get all the repports
+            Get all the reports
             Return:
-                list[Base_Repport]
+                list[Base_Report]
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, account_id, repport_date, repport_tag_id, repport_text FROM repport;")
-        return [Base_Repport(id=result[0], account_id=result[1], repport_date=datetime.strptime(result[2], "%Y-%m-%d").date(), repport_tag_id=result[3], repport_text=result[4]) for result in results]
-    def Repport_GetBy_ID(self, id: int) -> Union[Base_Repport, None]:
+        results: list[list[tuple]] = self.db.execute("SELECT id, account_id, report_date, report_tag_id, report_text FROM report;")
+        return [Base_Report(id=result[0], account_id=result[1], report_date=datetime.strptime(result[2], "%Y-%m-%d").date(), report_tag_id=result[3], report_text=result[4]) for result in results]
+    def Report_GetBy_ID(self, id: int) -> Union[Base_Report, None]:
         """
-            Get the repport by id
+            Get the report by id
             Params:
                 id: int
             Return:
-                Base_Repport or None
+                Base_Report or None
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, account_id, repport_date, repport_tag_id, repport_text FROM repport WHERE id = ?;", [id])
+        results: list[list[tuple]] = self.db.execute("SELECT id, account_id, report_date, report_tag_id, report_text FROM report WHERE id = ?;", [id])
         if results == []:
             return None
         result: tuple = results[0]
-        return Base_Repport(id=result[0], account_id=result[1], repport_date=datetime.strptime(result[2], "%Y-%m-%d").date(), repport_tag_id=result[3], repport_text=result[4])
-    def Repport_GetBy_AccountID(self, account_id: int) -> list[Base_Repport]:
+        return Base_Report(id=result[0], account_id=result[1], report_date=datetime.strptime(result[2], "%Y-%m-%d").date(), report_tag_id=result[3], report_text=result[4])
+    def Report_GetBy_AccountID(self, account_id: int) -> list[Base_Report]:
         """
-            Get the repport by account id
+            Get the report by account id
             Params:
                 account_id: int
             Return:
-                list[Base_Repport]
+                list[Base_Report]
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, account_id, repport_date, repport_tag_id, repport_text FROM repport WHERE account_id = ?;", [account_id])
-        return [Base_Repport(id=result[0], account_id=result[1], repport_date=datetime.strptime(result[2], "%Y-%m-%d").date(), repport_tag_id=result[3], repport_text=result[4]) for result in results]
-    def Repport_GetBy_TagID(self, tag_id: int) -> list[Base_Repport]:
+        results: list[list[tuple]] = self.db.execute("SELECT id, account_id, report_date, report_tag_id, report_text FROM report WHERE account_id = ?;", [account_id])
+        return [Base_Report(id=result[0], account_id=result[1], report_date=datetime.strptime(result[2], "%Y-%m-%d").date(), report_tag_id=result[3], report_text=result[4]) for result in results]
+    def Report_GetBy_TagID(self, tag_id: int) -> list[Base_Report]:
         """
-            Get the repport by tag id
+            Get the report by tag id
             Params:
                 tag_id: int
             Return:
-                list[Base_Repport]
+                list[Base_Report]
         """
-        results: list[list[tuple]] = self.db.execute("SELECT id, account_id, repport_date, repport_tag_id, repport_text FROM repport WHERE repport_tag_id = ?;", [tag_id])
-        return [Base_Repport(id=result[0], account_id=result[1], repport_date=datetime.strptime(result[2], "%Y-%m-%d").date(), repport_tag_id=result[3], repport_text=result[4]) for result in results]
+        results: list[list[tuple]] = self.db.execute("SELECT id, account_id, report_date, report_tag_id, report_text FROM report WHERE report_tag_id = ?;", [tag_id])
+        return [Base_Report(id=result[0], account_id=result[1], report_date=datetime.strptime(result[2], "%Y-%m-%d").date(), report_tag_id=result[3], report_text=result[4]) for result in results]
     
-    def Repport_Insert(self, account_id: int, repport_date: date, repport_tag_id: int, repport_text: str) -> None:
+    def Report_Insert(self, account_id: int, report_date: date, report_tag_id: int, report_text: str) -> None:
         """
-            Insert the repport
+            Insert the report
             Params:
                 account_id: int
-                repport_date: date
-                repport_tag_id: int
-                repport_text: str
+                report_date: date
+                report_tag_id: int
+                report_text: str
         """
-        self.db.execute("INSERT INTO repport (account_id, repport_date, repport_tag_id, repport_text) VALUES (?, ?, ?, ?);", [account_id, repport_date.strftime("%Y-%m-%d"), repport_tag_id, repport_text])
+        self.db.execute("INSERT INTO report (account_id, report_date, report_tag_id, report_text) VALUES (?, ?, ?, ?);", [account_id, report_date.strftime("%Y-%m-%d"), report_tag_id, report_text])
         return
     #################

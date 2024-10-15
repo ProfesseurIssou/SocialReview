@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from typing import Union
 from datetime import datetime
 try:
-    from Database import Database, Base_Platform, Base_Repport_Tag, Base_Repport
+    from Database import Database, Base_Platform, Base_Report_Tag, Base_Report
 except ImportError:
-    from .Database import Database, Base_Platform, Base_Repport_Tag, Base_Repport
+    from .Database import Database, Base_Platform, Base_Report_Tag, Base_Report
 
 
 app = Flask(__name__)
@@ -31,9 +31,9 @@ def MOCK_SEARCH():
 @app.route('/')
 def index():
     return render_template('index.html')
-@app.route('/account/<int:repport_account_id>') 
-def account(repport_account_id: int):
-    return render_template('account.html', repport_account_id=repport_account_id)
+@app.route('/account/<int:report_account_id>') 
+def account(report_account_id: int):
+    return render_template('account.html', report_account_id=report_account_id)
 #########
 
 
@@ -42,7 +42,7 @@ def account(repport_account_id: int):
 def search():
     """
         - POST /api/search
-        - Search for repports
+        - Search for reports
         - Request Body: {
             "username": str
         }
@@ -66,7 +66,30 @@ def search():
 
     return results
 
-
+@app.route('/api/score/<int:report_account_id>', methods=['GET'])
+def score(report_account_id: int):
+    """
+        - GET /api/score/<int:report_account_id>
+        - Get the score of an account
+        - Response: {
+            "score": int,
+            "interpretation": str,
+            "reports": [
+                {
+                    "id": int,
+                    "tag": str,
+                    "text": str,
+                    "date": str
+                },
+                ... 
+            ]
+        }
+    """
+    return {
+        "score": 0,
+        "interpretation": "No report",
+        "reports": []
+    }
 
 @app.route('/api/platforms', methods=['GET'])
 def get_platforms():
@@ -102,56 +125,43 @@ def post_account():
     db.Account_Insert(platform_id=platform_id, account_id=account_id, account_url=url)
     return True
 
+@app.route("/api/tags", methods=['GET'])
+def get_tags():
+    tags = db.ReportTag_GetAll()
+    return tags
 
 
-@app.route("/api/repports", methods=['GET'])
-def get_repports():
-    repports = db.Repport_GetAll()
-    return repports
-# @app.route("/api/repport", methods=['POST'])
-# def post_repport():
-#     """
-#         - POST /api/repport
-#         - Create a new repport
-#         - Request Body: {
-#             "account_id": int,  # Can be null
-#             "platform_id": int,
-#             "tag_id": int,
-#             "url": str,
-#             "text": str
-#     """
-#     repport = request.get_json()
-#     account_id = repport.get("account_id")
-#     platform_id = repport.get("platform_id")
-#     tag_id = repport.get("tag_id")
-#     url = repport.get("url")
-#     text = repport.get("text")
+@app.route("/api/reports", methods=['GET'])
+def get_reports():
+    reports = db.Report_GetAll()
+    for report in reports:
+        report.report_date = report.report_date.strftime("%Y-%m-%d")
+    return reports
 
-#     # Check if account_id exists
-#     is_new_account: bool = False
-#     if account_id:
-#         account = db.Account_GetBy_ID(account_id)
-#         if not account:
-#             is_new_account = True
-#     else:
-#         is_new_account = True
 
-#     # Check if platform_id exists
-#     platform = db.Platform_GetBy_ID(platform_id)
-#     if not platform:
-#         return {"error": "Platform not found"}
+@app.route("/api/report", methods=['POST'])
+def post_report():
+    """
+        - POST /api/report
+        - Create a new report
+        - Request Body: {
+            "account_id": int,
+            "tag_id": int,
+            "text": str
+    """
+    report = request.get_json()
+    account_id = report.get("account_id")
+    tag_id = report.get("tag_id")
+    text = report.get("text")
     
-#     # Check if tag_id exists
-#     tag = db.Repport_Tag_GetBy_ID(tag_id)
-#     if not tag:
-#         return {"error": "Tag not found"}
-    
-#     # Create new account if not exists
 
-
-#     db.Repport_Insert(repport)
-#     return repport
-
+    db.Report_Insert(
+        account_id=account_id,
+        report_date=datetime.now(),
+        report_tag_id=tag_id,
+        report_text=text
+    )
+    return report
 #######
 
 
