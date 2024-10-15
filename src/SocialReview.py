@@ -62,7 +62,7 @@ def search():
     
     results = MOCK_SEARCH()
     # filter results by username
-    results = [result for result in results if username in result["username"]]
+    results = [result for result in results if username.lower() in result["username"].lower()]
 
     return results
 
