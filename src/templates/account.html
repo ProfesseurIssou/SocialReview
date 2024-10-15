@@ -177,12 +177,21 @@
             const headers = ["Date", "Tag", "Text"];
 
             const reports = Report_Get_All();
+            const tags = Tag_Get_All();
             const data = [];
             for (let i = 0; i < reports.length; i++) {
                 if (reports[i].account_id == account_id) {
-                    data.push([reports[i].report_date, reports[i].report_tag, reports[i].report_text]);
+                    let tag = "";
+                    for (let j = 0; j < tags.length; j++) {
+                        if (tags[j].id == reports[i].report_tag_id) {
+                            tag = tags[j].tag_name;
+                        }
+                    }
+                    data.push([reports[i].report_date, tag, reports[i].report_text]);
                 }
             }
+            // Reverse list to have the most recent report first
+            data.reverse();
 
             const tr = document.createElement("tr");
             headers.forEach(header => {
