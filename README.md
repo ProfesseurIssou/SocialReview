@@ -2,14 +2,47 @@
 
 SocialReview est une application Flask qui permet de gérer des plateformes, des comptes, et des rapports. Ce projet offre plusieurs endpoints d'API pour interagir avec ces données.
 
-## Prérequis
+## Collaborateurs
+Augustin Marie
 
-- Docker
-- Python 3.x (facultatif pour exécuter en local sans Docker)
-- Flask
-- SQLite
+Alix Hamidou
 
-## Installation
+Gaëtan Tiberghien
+
+Mathieu Crombe
+
+IB Solution : alix.hamidou@ibsolutions.cloud
+
+## Installation du serveur pour production
+
+### Prérequis
+
+- Hôte Linux
+- Docker 
+
+### Packaging
+
+1. Clonez ce dépôt.
+
+2. Construire l'image 
+
+```bash
+docker build -t SocialReview .
+```
+
+### Déploiement
+
+```bash
+docker run SocialReview
+```
+
+## Installation local pour dévelopment
+
+### Prérequis
+
+- Python 3.x
+
+### Installation
 
 1. Clonez ce dépôt.
 
