@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='w3-theme-black.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='font-awesome.min.css') }}">
     <script src="{{ url_for('static',filename='api.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>EndlessMonitoring</title>
 </head>
 
@@ -46,6 +47,12 @@
         </div>
         <!-- ACCOUNT -->
 
+        <!-- GRAPH --> 
+        <div>
+            <h1>Nombre de Rapports par Jour</h1>
+            <canvas id="reportsChart" width="400" height="50"></canvas>
+        </div> 
+        
         <!-- REPORT FORM -->
         <div class="w3-row-padding w3-center w3-margin-top">
             <h5>Report</h5>
@@ -105,6 +112,7 @@
             LoadTags();
             UpdateStats();
             ReloadTable();
+            createChart();
         }
 
         function LoadTags() {
@@ -238,6 +246,113 @@
             HTML_TEXT_INPUT.value = "";
             UpdateStats();
             ReloadTable();
+            
+        }
+
+        // Fonction pour transformer la date dans un format exploitable (YYYY-MM-DD)
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0]; // Garde seulement la partie date (YYYY-MM-DD)
+        }
+
+        // Fonction pour regrouper les rapports par date
+        function groupReportsByDate(reports) {
+            const reportsPerDay = {};
+
+            reports.forEach(report => {
+                const date = formatDate(report.report_date);
+
+                if (reportsPerDay[date]) {
+                    reportsPerDay[date]++;
+                } else {
+                    reportsPerDay[date] = 1;
+                }
+            });
+
+            return reportsPerDay;
+        }
+
+        function Account_Get_ScoreMock() {
+            return {
+                "interpretation": "Dangereux",
+                "reports": [
+                    { "account_id": 1, "id": 1, "report_date": "Wed, 10 Oct 2024 12:00:00 GMT", "report_tag_id": 2, "report_text": "test" },
+                    { "account_id": 1, "id": 2, "report_date": "Wed, 10 Oct 2024 13:00:00 GMT", "report_tag_id": 1, "report_text": "vidou" },
+                    { "account_id": 1, "id": 3, "report_date": "Thu, 11 Oct 2024 14:00:00 GMT", "report_tag_id": 3, "report_text": "tet" },
+                    { "account_id": 1, "id": 4, "report_date": "Fri, 12 Oct 2024 15:00:00 GMT", "report_tag_id": 3, "report_text": "dd" },
+                    { "account_id": 1, "id": 5, "report_date": "Sat, 13 Oct 2024 16:00:00 GMT", "report_tag_id": 2, "report_text": "abc" },
+                    { "account_id": 1, "id": 6, "report_date": "Sat, 13 Oct 2024 17:00:00 GMT", "report_tag_id": 1, "report_text": "xyz" },
+                    { "account_id": 1, "id": 7, "report_date": "Sun, 14 Oct 2024 18:00:00 GMT", "report_tag_id": 2, "report_text": "example" },
+                    { "account_id": 1, "id": 8, "report_date": "Mon, 15 Oct 2024 19:00:00 GMT", "report_tag_id": 1, "report_text": "foo" },
+                    { "account_id": 1, "id": 9, "report_date": "Mon, 15 Oct 2024 20:00:00 GMT", "report_tag_id": 3, "report_text": "bar" },
+                    { "account_id": 1, "id": 10, "report_date": "Tue, 16 Oct 2024 21:00:00 GMT", "report_tag_id": 3, "report_text": "baz" },
+                    { "account_id": 1, "id": 11, "report_date": "Tue, 16 Oct 2024 22:00:00 GMT", "report_tag_id": 3, "report_text": "mock" },
+                    { "account_id": 1, "id": 12, "report_date": "Wed, 17 Oct 2024 23:00:00 GMT", "report_tag_id": 1, "report_text": "data" },
+                    { "account_id": 1, "id": 13, "report_date": "Thu, 18 Oct 2024 10:00:00 GMT", "report_tag_id": 2, "report_text": "more" },
+                    { "account_id": 1, "id": 14, "report_date": "Fri, 19 Oct 2024 11:00:00 GMT", "report_tag_id": 2, "report_text": "reports" },
+                    { "account_id": 1, "id": 15, "report_date": "Fri, 19 Oct 2024 12:00:00 GMT", "report_tag_id": 1, "report_text": "test" }
+                ],
+                "score": 80.0
+            };
+        }
+
+        // Fonction principale pour afficher le graphique
+        function createChart() {
+            report_account_id = document.getElementById("report_account_id").value;
+            
+            var datatest = Account_Get_Score(report_account_id); 
+            
+            if(report_account_id == 1){
+                datatest = Account_Get_ScoreMock();
+            }
+
+            // Récupération des données
+            /*const data = Account_Get_Score(report_account_id);
+            */
+
+            const data = datatest;
+
+            // Regrouper les rapports par date
+            const reportsPerDay = groupReportsByDate(data.reports);
+
+            // Extraire les dates et les comptes de rapports
+            const dates = Object.keys(reportsPerDay);
+            const reportCounts = Object.values(reportsPerDay);
+
+            // Création du graphique avec Chart.js
+            const ctx = document.getElementById('reportsChart').getContext('2d');
+            const reportsChart = new Chart(ctx, {
+                type: 'line', // Type de graphique (ligne avec remplissage)
+                data: {
+                    labels: dates, // Les dates en tant que labels (axe X)
+                    datasets: [{
+                        label: 'Nombre de rapports',
+                        data: reportCounts, // Le nombre de rapports pour chaque date (axe Y)
+                        backgroundColor: 'rgba(75, 192, 192, 0.4)', // Couleur de remplissage de l'aire
+                        borderColor: 'rgba(75, 192, 192, 1)', // Couleur de la ligne
+                        borderWidth: 2,
+                        fill: true // Remplissage de la courbe
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Nombre de rapports'
+                            },
+                            beginAtZero: true // Commence l'axe Y à zéro
+                        }
+                    }
+                }
+            });
         }
 
     </script>
